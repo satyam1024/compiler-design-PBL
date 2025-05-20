@@ -2,7 +2,9 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include<unordered_map>
 #include "lexer.h"
+#include "ast_printer.h"
 #include "parser.h"
 #include "icgenerator.h"
 #include "optimizer.h"
@@ -25,10 +27,19 @@ int main() {
     // Tokenization
     Lexer lexer(code);
     vector<Token> tokens = lexer.tokenize();
+    for(auto it:tokens)
+    {
+        cout<<tokenTypeMap[it.type]<<"\t"<<it.value<<endl;
+    }
 
     // Parsing
     Parser parser(tokens);
     parser.parse();
+
+    for (auto& node : parser.ast) {
+    printAST(node);
+}
+
 
     // Intermediate Code Generation
     cout << "\n--- Intermediate Code ---\n";

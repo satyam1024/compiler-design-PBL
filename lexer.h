@@ -4,14 +4,15 @@
 #include <string>
 #include <vector>
 #include "tokens.h"
+using namespace std;
 
 class Lexer {
 public:
-    Lexer(const std::string& input);
-    std::vector<Token> tokenize();
+    Lexer(const string& input);
+    vector<Token> tokenize();
 
 private:
-    std::string text;
+    string text;
     size_t pos;
     char current_char;
 

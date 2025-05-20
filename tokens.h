@@ -2,6 +2,8 @@
 #define TOKENS_H
 
 #include <string>
+#include<unordered_map>
+using namespace std;
 
 enum TokenType {
     T_INT, T_FLOAT, T_STRING, T_CHAR, T_CONST,
@@ -16,10 +18,11 @@ enum TokenType {
     T_EOF, T_UNKNOWN
 };
 
+extern unordered_map<int, string> tokenTypeMap;
 struct Token {
     TokenType type;
-    std::string value;
-    Token(TokenType type, const std::string& value) : type(type), value(value) {}
+    string value;
+    Token(TokenType type, const string& value) : type(type), value(value) {}
 };
 
 #endif

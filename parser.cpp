@@ -52,7 +52,7 @@ void Parser::statement() {
 }
 
 void Parser::declaration() {
-    Token typeToken = advance(); // vari, varf, etc.
+    Token typeToken = advance();
 
     bool isConst = (typeToken.type == T_CONST);
     if (isConst) {
@@ -71,17 +71,25 @@ void Parser::declaration() {
         return;
     }
 
+    std::shared_ptr<ASTNode> declNode = std::make_shared<ASTNode>(ASTNodeType::Declaration);
+    declNode->value = identifier.value;
+    declNode->dataType = typeToken.value;
+    declNode->isConst = isConst;
+
     if (match(T_ASSIGN)) {
-        if (!match(T_NUMBER) && !match(T_STRING_LITERAL)) {
+        if (match(T_NUMBER) || match(T_STRING_LITERAL)) {
+            Token val = tokens[pos - 1];
+            auto literalNode = std::make_shared<ASTNode>(ASTNodeType::Literal, val.value);
+            declNode->children.push_back(literalNode);
+        } else {
             std::cerr << "Expected a value after '='\n";
         }
     }
 
     expect(T_SEMI, "Expected ';' after declaration");
-
-    // ✅ Add to symbol table
     symbolTable[identifier.value] = {typeToken.value, isConst};
 
+    ast.push_back(declNode);
     std::cout << "Valid declaration: " << identifier.value << " of type " << typeToken.value
               << (isConst ? " (const)" : "") << "\n";
 }
@@ -92,12 +100,16 @@ void Parser::outputStatement() {
     if (!expect(T_IDENTIFIER, "Expected variable after output")) return;
     Token identifier = tokens[pos - 1];
 
-    // ✅ Semantic check: must be declared
     if (!symbolTable.count(identifier.value)) {
         std::cerr << "Semantic error: Variable '" << identifier.value << "' not declared.\n";
         return;
     }
 
     expect(T_SEMI, "Expected ';' after output");
+
+    auto outputNode = std::make_shared<ASTNode>(ASTNodeType::Output);
+    outputNode->value = identifier.value;
+    ast.push_back(outputNode);
+
     std::cout << "Valid output: " << identifier.value << "\n";
 }

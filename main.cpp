@@ -1,53 +1,42 @@
-#include <iostream>
-#include <vector>
-#include <string>
-#include <sstream>
 #include "lexer.h"
 #include "parser.h"
-#include "icgenerator.h"
-#include "optimizer.h"
 #include "codegen.h"
-
-using namespace std;
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
 int main() {
-    string code, line;
-    cout << "=== Simple Compiler ===\n";
-    cout << "Enter your code below (type END on a new line to finish input):\n";
-
-    // Multi-line input from user
-    while (true) {
-        getline(cin, line);
-        if (line == "END") break;
-        code += line + " ";
+  
+    
+    std::ifstream infile("input.txt");
+    if (!infile) {
+        std::cerr << "Error: Cannot open input file "<< "\n";
+        return 1;
     }
+    std::stringstream buffer;
+    buffer << infile.rdbuf();
+    std::string src = buffer.str();
+    infile.close();
 
-    // Tokenization
-    Lexer lexer(code);
-    vector<Token> tokens = lexer.tokenize();
+    // Compile as before
+    Lexer lexer(src);
+    auto tokens = lexer.tokenize();
 
-    // Parsing
     Parser parser(tokens);
-    parser.parse();
+    auto ast = parser.parseProgram();
 
-    // Intermediate Code Generation
-    cout << "\n--- Intermediate Code ---\n";
-    ICGenerator icg(tokens);
-    vector<string> ic = icg.generate();
+    CodeGenerator codegen;
+    std::string c_code = codegen.generate(ast);
 
-    for (const string& line : ic) {
-        cout << line << endl;
+    
+    std::ofstream outfile("output.c");
+    if (!outfile) {
+        std::cerr << "Error: Cannot open output file " << "\n";
+        return 1;
     }
+    outfile << c_code;
+    outfile.close();
 
-    // Optimization
-    cout << "\n--- Optimized Intermediate Code ---\n";
-    vector<string> optimizedIC = Optimizer::optimize(ic);
-    for (const string& line : optimizedIC) {
-        cout << line << endl;
-    }
-
-    // Final Code Generation
-    CodeGenerator::generate(optimizedIC);
-
+    std::cout << "Compilation successful. Output written to "  << "\n";
     return 0;
 }

@@ -1,26 +1,32 @@
-#ifndef LEXER_H
-#define LEXER_H
-
+// lexer.h
+#pragma once
 #include <string>
 #include <vector>
-#include "tokens.h"
+#include <cctype>
+#include <unordered_map>
+
+enum class TokenType {
+    LET, BE_A, INT, IDENTIFIER, NUMBER, IF, THEN, ELSE, END, FOR, IN, TO, LOOP, TIMES, INPUT, PRINT,
+    STRING, ASSIGN, EOL, UNKNOWN, EOF_TOKEN
+};
+
+struct Token {
+    TokenType type;
+    std::string value;
+    int line;
+};
 
 class Lexer {
 public:
-    Lexer(const std::string& input);
+    Lexer(const std::string& src);
     std::vector<Token> tokenize();
-
 private:
-    std::string text;
+    std::string src;
     size_t pos;
-    char current_char;
-
-    void advance();
-    void skip_whitespace();
-    Token make_identifier_or_keyword();
-    Token make_number();
-    Token make_string_literal();
-    Token get_next_token();
+    int line;
+    std::unordered_map<std::string, TokenType> keywords;
+    char peek();
+    char get();
+    void skipWhitespace();
+    Token nextToken();
 };
-
-#endif

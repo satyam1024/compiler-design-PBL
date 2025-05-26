@@ -1,0 +1,13 @@
+let age be_a int 25
+print age
+if age  then
+  print "Adult"
+else
+  print "Minor"
+end
+for i in 1 to 3 then
+  print i
+end
+loop 2 times then
+  print "Hi"
+end

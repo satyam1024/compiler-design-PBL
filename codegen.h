@@ -1,12 +1,12 @@
-#ifndef CODEGEN_H
-#define CODEGEN_H
-
-#include <vector>
+// codegen.h
+#pragma once
+#include "ast.h"
 #include <string>
 
 class CodeGenerator {
 public:
-    static void generate(const std::vector<std::string>& optimizedIC);
+    std::string generate(ASTNodePtr node);
+private:
+    std::string gen(ASTNodePtr node, int indent = 0);
+    std::string indent(int n);
 };
-
-#endif

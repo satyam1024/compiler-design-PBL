@@ -1,34 +1,24 @@
-#ifndef PARSER_H
-#define PARSER_H
-
-#include "tokens.h"
-#include <vector>
-#include <unordered_map>
-
-struct Symbol {
-    std::string type;
-    bool isConstant;
-};
+// parser.h
+#pragma once
+#include "lexer.h"
+#include "ast.h"
 
 class Parser {
 public:
     Parser(const std::vector<Token>& tokens);
-    void parse();
-
+    ASTNodePtr parseProgram();
 private:
     std::vector<Token> tokens;
     size_t pos;
-
-    std::unordered_map<std::string, Symbol> symbolTable;
-
-    Token current();
-    Token advance();
+    Token peek();
+    Token get();
     bool match(TokenType type);
-    bool expect(TokenType type, const std::string& msg);
-
-    void statement();
-    void declaration();
-    void outputStatement();
+    ASTNodePtr parseStatement();
+    ASTNodePtr parseVarDecl();
+    ASTNodePtr parsePrint();
+    ASTNodePtr parseInput();
+    ASTNodePtr parseIf();
+    ASTNodePtr parseFor();
+    ASTNodePtr parseLoop();
+    ASTNodePtr parseExpression();
 };
-
-#endif

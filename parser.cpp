@@ -1,103 +1,95 @@
+// parser.cpp
 #include "parser.h"
-#include <iostream>
 
 Parser::Parser(const std::vector<Token>& tokens) : tokens(tokens), pos(0) {}
 
-Token Parser::current() {
-    return pos < tokens.size() ? tokens[pos] : Token(T_EOF, "");
+Token Parser::peek() { return pos < tokens.size() ? tokens[pos] : Token{TokenType::EOF_TOKEN, "", 0}; }
+Token Parser::get() { return pos < tokens.size() ? tokens[pos++] : Token{TokenType::EOF_TOKEN, "", 0}; }
+bool Parser::match(TokenType type) { if (peek().type == type) { get(); return true; } return false; }
+
+ASTNodePtr Parser::parseProgram() {
+    auto prog = std::make_shared<ProgramNode>();
+    while (peek().type != TokenType::EOF_TOKEN) {
+        auto stmt = parseStatement();
+        if (stmt) prog->statements.push_back(stmt);
+        else get(); // Skip unknown tokens
+    }
+    return prog;
 }
 
-Token Parser::advance() {
-    return pos < tokens.size() ? tokens[pos++] : Token(T_EOF, "");
+ASTNodePtr Parser::parseStatement() {
+    if (match(TokenType::LET)) return parseVarDecl();
+    if (match(TokenType::PRINT)) return parsePrint();
+    if (match(TokenType::INPUT)) return parseInput();
+    if (match(TokenType::IF)) return parseIf();
+    if (match(TokenType::FOR)) return parseFor();
+    if (match(TokenType::LOOP)) return parseLoop();
+    return nullptr;
 }
 
-bool Parser::match(TokenType type) {
-    if (current().type == type) {
-        advance();
-        return true;
-    }
-    return false;
+ASTNodePtr Parser::parseVarDecl() {
+    auto name = get();
+    match(TokenType::BE_A);
+    auto type = get();
+    auto value = parseExpression();
+    return std::make_shared<VarDeclNode>(name.value, type.value, value);
 }
 
-bool Parser::expect(TokenType type, const std::string& msg) {
-    if (match(type)) return true;
-    std::cerr << "Syntax error near token: " << current().value << " (" << msg << ")\n";
-    return false;
+ASTNodePtr Parser::parsePrint() {
+    auto expr = parseExpression();
+    return std::make_shared<PrintNode>(expr);
 }
 
-void Parser::parse() {
-    while (current().type != T_EOF) {
-        statement();
-    }
+ASTNodePtr Parser::parseInput() {
+    auto var = get();
+    return std::make_shared<InputNode>(var.value);
 }
 
-void Parser::statement() {
-    Token tok = current();
-
-    switch (tok.type) {
-        case T_INT:
-        case T_FLOAT:
-        case T_STRING:
-        case T_CHAR:
-        case T_CONST:
-            declaration();
-            break;
-        case T_OUTPUT:
-            outputStatement();
-            break;
-        default:
-            std::cerr << "Syntax error near token: " << tok.value << "\n";
-            advance();
+ASTNodePtr Parser::parseIf() {
+    auto cond = parseExpression();
+    match(TokenType::THEN);
+    auto thenBlock = std::make_shared<BlockNode>();
+    while (peek().type != TokenType::ELSE && peek().type != TokenType::END && peek().type != TokenType::EOF_TOKEN)
+        thenBlock->statements.push_back(parseStatement());
+    ASTNodePtr elseBlock = nullptr;
+    if (match(TokenType::ELSE)) {
+        elseBlock = std::make_shared<BlockNode>();
+        while (peek().type != TokenType::END && peek().type != TokenType::EOF_TOKEN)
+            std::dynamic_pointer_cast<BlockNode>(elseBlock)->statements.push_back(parseStatement());
     }
+    match(TokenType::END);
+    return std::make_shared<IfNode>(cond, thenBlock, elseBlock);
 }
 
-void Parser::declaration() {
-    Token typeToken = advance(); // vari, varf, etc.
-
-    bool isConst = (typeToken.type == T_CONST);
-    if (isConst) {
-        if (!match(T_INT) && !match(T_FLOAT) && !match(T_STRING) && !match(T_CHAR)) {
-            std::cerr << "Expected data type after 'constant'\n";
-            return;
-        }
-        typeToken = tokens[pos - 1];
-    }
-
-    if (!expect(T_IDENTIFIER, "Expected variable name")) return;
-    Token identifier = tokens[pos - 1];
-
-    if (symbolTable.count(identifier.value)) {
-        std::cerr << "Semantic error: Variable '" << identifier.value << "' already declared.\n";
-        return;
-    }
-
-    if (match(T_ASSIGN)) {
-        if (!match(T_NUMBER) && !match(T_STRING_LITERAL)) {
-            std::cerr << "Expected a value after '='\n";
-        }
-    }
-
-    expect(T_SEMI, "Expected ';' after declaration");
-
-    // ✅ Add to symbol table
-    symbolTable[identifier.value] = {typeToken.value, isConst};
-
-    std::cout << "Valid declaration: " << identifier.value << " of type " << typeToken.value
-              << (isConst ? " (const)" : "") << "\n";
+ASTNodePtr Parser::parseFor() {
+    auto var = get();
+    match(TokenType::IN);
+    auto start = parseExpression();
+    match(TokenType::TO);
+    auto end = parseExpression();
+    match(TokenType::THEN);
+    auto block = std::make_shared<BlockNode>();
+    while (peek().type != TokenType::END && peek().type != TokenType::EOF_TOKEN)
+        block->statements.push_back(parseStatement());
+    match(TokenType::END);
+    return std::make_shared<ForNode>(var.value, start, end, block);
 }
 
-void Parser::outputStatement() {
-    advance(); // consume 'output'
+ASTNodePtr Parser::parseLoop() {
+    auto times = parseExpression();
+    match(TokenType::TIMES);
+    match(TokenType::THEN);
+    auto block = std::make_shared<BlockNode>();
+    while (peek().type != TokenType::END && peek().type != TokenType::EOF_TOKEN)
+        block->statements.push_back(parseStatement());
+    match(TokenType::END);
+    return std::make_shared<LoopNode>(times, block);
+}
 
-    if (!expect(T_IDENTIFIER, "Expected variable after output")) return;
-    Token identifier = tokens[pos - 1];
-
-    // ✅ Semantic check: must be declared
-    if (!symbolTable.count(identifier.value)) {
-        std::cerr << "Semantic error: Variable '" << identifier.value << "' not declared.\n";
-        return;
-    }
-
-    expect(T_SEMI, "Expected ';' after output");
-    std::cout << "Valid output: " << identifier.value << "\n";
+ASTNodePtr Parser::parseExpression() {
+    // For simplicity, only literals and identifiers for now
+    if (peek().type == TokenType::NUMBER) return std::make_shared<LiteralNode>(get().value);
+    if (peek().type == TokenType::STRING) return std::make_shared<LiteralNode>(get().value);
+    if (peek().type == TokenType::IDENTIFIER) return std::make_shared<IdentNode>(get().value);
+    return nullptr;
 }

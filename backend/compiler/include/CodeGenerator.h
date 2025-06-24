@@ -1,10 +1,10 @@
 #ifndef CODE_GENERATOR_H
 #define CODE_GENERATOR_H
 
-#include "Optimizer.h"
+#include "IntermediateCodeGen.h"
 #include <string>
 #include <vector>
-#include <unordered_set>
+#include <unordered_map>
 
 class CodeGenerator {
 public:
@@ -14,10 +14,16 @@ public:
 
 private:
     std::string cCode;
-    std::unordered_set<std::string> declaredVars;
 
-    void declareVar(const std::string& var);
-    bool isNumber(const std::string& s) const;
+    // ✅ Change from set<string> to map<string, string> to store variable types
+    std::unordered_map<std::string, std::string> declaredVars;
+
+    // ✅ Modified declareVar to take assigned value for type inference
+    void declareVar(const std::string& var, const std::string& value);
+
+    // ✅ Helpers to detect number types
+    bool isInteger(const std::string& s) const;
+    bool isDouble(const std::string& s) const;
 };
 
 #endif // CODE_GENERATOR_H

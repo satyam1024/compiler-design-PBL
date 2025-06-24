@@ -1,8 +1,15 @@
 #include "CodeGenerator.h"
 #include <sstream>
 #include <cctype>
+#include <cstdlib>
 
 CodeGenerator::CodeGenerator() {}
+
+std::string promote(const std::string& t1, const std::string& t2) {
+    if (t1 == "const char*" || t2 == "const char*") return "const char*"; // not really valid but just in case
+    if (t1 == "double" || t2 == "double") return "double";
+    return "int";
+}
 
 void CodeGenerator::generate(const std::vector<IRInstruction>& ir) {
     cCode.clear();
@@ -11,32 +18,35 @@ void CodeGenerator::generate(const std::vector<IRInstruction>& ir) {
     std::ostringstream oss;
     oss << "#include <stdio.h>\n\nint main() {\n";
 
-    // First pass: declare all variables used as targets
+    // First pass: determine variable types
     for (const auto& instr : ir) {
         if (instr.opcode == "ASSIGN" && instr.operands.size() == 2) {
-            declareVar(instr.operands[1]);
+            declareVar(instr.operands[1], instr.operands[0]);
         } else if ((instr.opcode == "ADD" || instr.opcode == "SUB" ||
                     instr.opcode == "MUL" || instr.opcode == "DIV" ||
                     instr.opcode == "LE" || instr.opcode == "LT" ||
                     instr.opcode == "GT" || instr.opcode == "GE" ||
                     instr.opcode == "EQ" || instr.opcode == "NE") &&
                    instr.operands.size() == 3) {
-            declareVar(instr.operands[2]);
+            std::string t1 = declaredVars[instr.operands[0]];
+            std::string t2 = declaredVars[instr.operands[1]];
+            std::string resultType = promote(t1, t2);
+            declaredVars[instr.operands[2]] = resultType;
+
         } else if (instr.opcode == "INPUT" && instr.operands.size() == 1) {
-            declareVar(instr.operands[0]);
+            declareVar(instr.operands[0], "");
         }
     }
 
-    // Declare all variables as double for simplicity
-    for (const auto& var : declaredVars) {
-        oss << "    double " << var << " = 0;\n";
-    }
+    // Declare variables
+    for (const auto& entry : declaredVars) {
+    const std::string& var = entry.first;
+    const std::string& type = entry.second;
+    oss << "    " << type << " " << var << " = 0;\n";
+}
 
-    // For string literals, use const char* in output
-    bool needsStringOutput = false;
 
     // Second pass: emit code
-    std::vector<std::string> labelStack;
     for (const auto& instr : ir) {
         if (instr.opcode == "ASSIGN" && instr.operands.size() == 2) {
             oss << "    " << instr.operands[1] << " = " << instr.operands[0] << ";\n";
@@ -63,15 +73,25 @@ void CodeGenerator::generate(const std::vector<IRInstruction>& ir) {
         } else if (instr.opcode == "INPUT" && instr.operands.size() == 1) {
             oss << "    printf(\"Enter value for " << instr.operands[0] << ": \");\n";
             oss << "    scanf(\"%lf\", &" << instr.operands[0] << ");\n";
-        } else if (instr.opcode == "OUTPUT" && instr.operands.size() == 1) {
-            // Check if it's a string literal
-            if (!instr.operands[0].empty() && instr.operands[0][0] == '"') {
-                needsStringOutput = true;
-                oss << "    printf(" << instr.operands[0] << ");\n";
-            } else {
-                oss << "    printf(\"%lf\\n\", " << instr.operands[0] << ");\n";
-            }
-        } else if (instr.opcode == "LABEL" && instr.operands.size() == 1) {
+        }  else if (instr.opcode == "OUTPUT" && instr.operands.size() == 1) {
+    const std::string& var = instr.operands[0];
+
+    if (!var.empty() && var[0] == '"') {
+        oss << "    printf(" << var << ");\n";
+    } else if (declaredVars.count(var)) {
+        const std::string& type = declaredVars[var];
+        if (type == "int")
+            oss << "    printf(\"%d\\n\", " << var << ");\n";
+        else if (type == "double")
+            oss << "    printf(\"%lf\\n\", " << var << ");\n";
+        else if (type == "const char*")
+            oss << "    printf(\"%s\\n\", " << var << ");\n";
+    } else {
+        // fallback
+        oss << "    printf(\"%lf\\n\", " << var << ");\n";
+    }
+}
+ else if (instr.opcode == "LABEL" && instr.operands.size() == 1) {
             oss << instr.operands[0] << ":\n";
         } else if (instr.opcode == "JMP" && instr.operands.size() == 1) {
             oss << "    goto " << instr.operands[0] << ";\n";
@@ -86,20 +106,50 @@ void CodeGenerator::generate(const std::vector<IRInstruction>& ir) {
     cCode = oss.str();
 }
 
+void CodeGenerator::declareVar(const std::string& var, const std::string& value) {
+    if (var.empty() || declaredVars.count(var)) return;
+
+    if (value.empty()) {
+        declaredVars[var] = "double"; // fallback
+        return;
+    }
+
+    if (value[0] == '"') {
+        declaredVars[var] = "const char*";
+    } else if (isInteger(value)) {
+        declaredVars[var] = "int";
+    } else if (isDouble(value)) {
+        declaredVars[var] = "double";
+    } else if (declaredVars.count(value)) {
+        declaredVars[var] = declaredVars[value]; // copy from other variable
+    } else {
+        declaredVars[var] = "double"; // default
+    }
+}
+
+
+bool CodeGenerator::isInteger(const std::string& s) const {
+    if (s.empty()) return false;
+    for (char c : s) {
+        if (!isdigit(c)) return false;
+    }
+    return true;
+}
+
+bool CodeGenerator::isDouble(const std::string& s) const {
+    if (s.empty()) return false;
+    bool dot = false;
+    for (char c : s) {
+        if (c == '.') {
+            if (dot) return false;
+            dot = true;
+        } else if (!isdigit(c)) {
+            return false;
+        }
+    }
+    return dot;
+}
+
 const std::string& CodeGenerator::getCCode() const {
     return cCode;
-}
-
-void CodeGenerator::declareVar(const std::string& var) {
-    // Only declare if not a literal or already declared
-    if (var.empty()) return;
-    if (var[0] == '"' || isNumber(var)) return;
-    declaredVars.insert(var);
-}
-
-bool CodeGenerator::isNumber(const std::string& s) const {
-    if (s.empty()) return false;
-    char* end = nullptr;
-    std::strtod(s.c_str(), &end);
-    return end && *end == '\0';
 }

@@ -32,5 +32,6 @@ private:
     bool isVariableDeclared(const std::string& name) const;
     VarType getVariableType(const std::string& name) const;
 };
+std::string varTypeToString(VarType type);
 
 #endif // SEMANTIC_ANALYZER_H

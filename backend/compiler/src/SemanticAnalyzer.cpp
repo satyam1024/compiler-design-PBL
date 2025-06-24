@@ -48,18 +48,37 @@ void SemanticAnalyzer::analyzeStatement(const Statement* stmt) {
 
     // Binary Operation
     if (auto binOp = dynamic_cast<const BinOpStmt*>(stmt)) {
-        if (!isVariableDeclared(binOp->left)) {
-            errors.push_back("Line " + std::to_string(stmt->line) + ": Variable '" + binOp->left + "' not declared.");
-        }
-        if (!isVariableDeclared(binOp->right)) {
-            errors.push_back("Line " + std::to_string(stmt->line) + ": Variable '" + binOp->right + "' not declared.");
-        }
-        // Result variable: declare if not already
-        if (!isVariableDeclared(binOp->result)) {
-            declareVariable(binOp->result, VarType::NUMBER, stmt->line);
-        }
-        return;
+    VarType leftType = VarType::UNKNOWN;
+    VarType rightType = VarType::UNKNOWN;
+
+    if (!isVariableDeclared(binOp->left)) {
+        errors.push_back("Line " + std::to_string(stmt->line) + ": Variable '" + binOp->left + "' not declared.");
+    } else {
+        leftType = getVariableType(binOp->left);
     }
+
+    if (!isVariableDeclared(binOp->right)) {
+        errors.push_back("Line " + std::to_string(stmt->line) + ": Variable '" + binOp->right + "' not declared.");
+    } else {
+        rightType = getVariableType(binOp->right);
+    }
+
+    // ❗ Type checking logic
+    if (leftType != VarType::NUMBER || rightType != VarType::NUMBER) {
+        std::stringstream ss;
+        ss << "Line " << stmt->line << ": Cannot perform binary operation on types ";
+        ss << varTypeToString(leftType) << " and " << varTypeToString(rightType) << ".";
+        errors.push_back(ss.str());
+    }
+
+    // Result variable: declare if not already
+    if (!isVariableDeclared(binOp->result)) {
+        declareVariable(binOp->result, VarType::NUMBER, stmt->line);
+    }
+
+    return;
+}
+
 
     // If Statement
     if (auto ifStmt = dynamic_cast<const IfStmt*>(stmt)) {
@@ -160,4 +179,13 @@ VarType SemanticAnalyzer::getVariableType(const std::string& name) const {
 
 const std::vector<std::string>& SemanticAnalyzer::getErrors() const {
     return errors;
+}
+
+std::string varTypeToString(VarType type) {
+    switch (type) {
+        case VarType::NUMBER: return "NUMBER";
+        case VarType::STRING: return "STRING";
+        case VarType::UNKNOWN: return "UNKNOWN";
+        default: return "INVALID";
+    }
 }

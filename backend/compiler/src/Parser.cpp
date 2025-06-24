@@ -158,23 +158,33 @@ std::unique_ptr<Statement> Parser::parseRepeat() {
     auto stmt = std::make_unique<RepeatStmt>();
     stmt->line = peek().line;
     expect(TokenType::REPEAT, "Expected 'repeat'");
+
     if (peek().type == TokenType::FROM) {
-        get();
+        get(); // consume 'from'
         if (peek().type != TokenType::IDENTIFIER) {
             errors.push_back("Line " + std::to_string(peek().line) + ": Expected variable name after 'from'.");
             return nullptr;
         }
         stmt->varName = get().lexeme;
-        expect(TokenType::ASSIGN, "Expected '=' after variable name.");
+
+        // Expect '=' as ASSIGN token after variable name
+        if (peek().type == TokenType::ASSIGN) {
+            get(); // consume '='
+        } else {
+            errors.push_back("Line " + std::to_string(peek().line) + ": Expected '=' after variable name.");
+            return nullptr;
+        }
+
         stmt->start = parseExpression();
         expect(TokenType::TO, "Expected 'to'");
         stmt->end = parseExpression();
         expect(TokenType::JUMP, "Expected 'jump'");
         stmt->jump = parseExpression();
+
         // Parse loop body (for now, just one statement)
         stmt->body.push_back(parseStatement());
     } else if (peek().type == TokenType::UNTIL) {
-        get();
+        get(); // consume 'until'
         stmt->untilCondition = parseExpression();
         stmt->body.push_back(parseStatement());
     } else {
@@ -184,33 +194,58 @@ std::unique_ptr<Statement> Parser::parseRepeat() {
     return stmt;
 }
 
-std::unique_ptr<Expression> Parser::parseExpression() {
-    // For now, just parse primary or relop
+
+std::unique_ptr<Expression> Parser::parsePrimary() {
     if (peek().type == TokenType::IDENTIFIER) {
         auto id = std::make_unique<Identifier>();
         id->name = get().lexeme;
+        id->line = peek().line;
+        id->column = peek().column;
         return id;
     }
     if (peek().type == TokenType::NUMBER) {
         auto num = std::make_unique<NumberLiteral>();
         num->value = get().lexeme;
+        num->line = peek().line;
+        num->column = peek().column;
         return num;
     }
     if (peek().type == TokenType::STRING) {
         auto str = std::make_unique<StringLiteral>();
         str->value = get().lexeme;
+        str->line = peek().line;
+        str->column = peek().column;
         return str;
     }
+
+    errors.push_back("Line " + std::to_string(peek().line) + ": Expected a primary expression (identifier, number, or string).");
+    return nullptr;
+}
+
+std::unique_ptr<Expression> Parser::parseExpression() {
+    auto left = parsePrimary();
+    if (!left) return nullptr;
+
     if (peek().type == TokenType::REL_OP) {
-        // Simple relop: a < b
+        std::string op = get().lexeme;
+
+        auto right = parsePrimary();
+        if (!right) {
+            errors.push_back("Line " + std::to_string(peek().line) + ": Expected right-hand operand after relational operator.");
+            return nullptr;
+        }
+
         auto rel = std::make_unique<RelOpExpr>();
-        rel->left = get().lexeme;
-        rel->op = get().lexeme;
-        rel->right = get().lexeme;
+        rel->line = left->line;
+        rel->column = left->column;
+        rel->op = op;
+        rel->left = std::move(left);
+        rel->right = std::move(right);
+
         return rel;
     }
-    errors.push_back("Line " + std::to_string(peek().line) + ": Invalid expression.");
-    return nullptr;
+
+    return left;
 }
 
 std::vector<std::string> Parser::getErrors() const {

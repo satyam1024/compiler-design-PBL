@@ -116,18 +116,6 @@ chokidar.watch(userDir).on("all", (event, changedPath) => {
   io.emit("file:refresh", changedPath);
 });
 
-// === File Tree & Content APIs ===
-app.get("/files", async (req, res) => {
-  const fileTree = await generateFileTree(userDir);
-  res.json({ tree: fileTree });
-});
-
-app.get("/files/content", async (req, res) => {
-  const filePath = req.query.path;
-  const content = await readFile(path.join(userDir, filePath), "utf-8");
-  res.json({ content });
-});
-
 // === Compiler Integration ===
 const COMPILER_PATH = path.resolve("./compiler/compiler.exe");
 const execFileAsync = promisify(execFile);
@@ -182,26 +170,6 @@ app.post("/compile", async (req, res) => {
       .json({ error: "Compiler execution failed", details: e.message });
   }
 });
-
-// === File Tree Helper ===
-async function generateFileTree(directory) {
-  const tree = {};
-  async function buildTree(currentDir, currentTree) {
-    const files = await readdir(currentDir);
-    for (const file of files) {
-      const filePath = path.join(currentDir, file);
-      const stats = await stat(filePath);
-      if (stats.isDirectory()) {
-        currentTree[file] = {};
-        await buildTree(filePath, currentTree[file]);
-      } else {
-        currentTree[file] = null;
-      }
-    }
-  }
-  await buildTree(directory, tree);
-  return tree;
-}
 
 // === Start Server ===
 const PORT = 9900;

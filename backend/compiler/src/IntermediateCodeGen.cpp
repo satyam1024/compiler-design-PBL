@@ -19,6 +19,17 @@ std::string IntermediateCodeGen::newTemp() {
     return "_t" + std::to_string(tempVarCounter++);
 }
 
+// Helper function for relational opcodes
+std::string IntermediateCodeGen::relOpToOpcode(const std::string& op) {
+    if (op == "==") return "EQ";
+    if (op == "!=") return "NE";
+    if (op == "<")  return "LT";
+    if (op == "<=") return "LE";
+    if (op == ">")  return "GT";
+    if (op == ">=") return "GE";
+    return "INVALID";
+}
+
 void IntermediateCodeGen::genStatement(const Statement* stmt) {
     if (!stmt) return;
 
@@ -65,14 +76,15 @@ void IntermediateCodeGen::genStatement(const Statement* stmt) {
         std::string labelEnd = "L" + std::to_string(tempVarCounter++);
         ir.emplace_back("JZ", std::vector<std::string>{cond, labelElse}, stmt->line);
 
+        // Generate THEN branch
         for (const auto& s : ifStmt->thenBranch) genStatement(s.get());
         ir.emplace_back("JMP", std::vector<std::string>{labelEnd}, stmt->line);
 
+        // Generate ELSE branch
         ir.emplace_back("LABEL", std::vector<std::string>{labelElse}, stmt->line);
-        for (const auto& s : ifStmt->elseIfBranches) genStatement(s.get());
+        for (const auto& s : ifStmt->elseBranch) genStatement(s.get());  // FIX: Add else branch here
 
         ir.emplace_back("LABEL", std::vector<std::string>{labelEnd}, stmt->line);
-        for (const auto& s : ifStmt->elseBranch) genStatement(s.get());
         return;
     }
 
@@ -144,13 +156,15 @@ void IntermediateCodeGen::genExpression(const Expression* expr, std::string& res
         return;
     }
     if (auto rel = dynamic_cast<const RelOpExpr*>(expr)) {
-        // Generate code for relational operation (e.g., a < b)
-        std::string left = rel->left;
-        std::string right = rel->right;
+        std::string leftVal, rightVal;
+        genExpression(rel->left.get(), leftVal);
+        genExpression(rel->right.get(), rightVal);
         std::string temp = newTemp();
-        ir.emplace_back(rel->op, std::vector<std::string>{left, right, temp}, expr->line);
+        std::string opcode = relOpToOpcode(rel->op);
+        ir.emplace_back(opcode, std::vector<std::string>{leftVal, rightVal, temp}, expr->line);
         result = temp;
         return;
     }
+
     result = "";
 }

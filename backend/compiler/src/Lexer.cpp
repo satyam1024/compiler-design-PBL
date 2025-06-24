@@ -49,10 +49,6 @@ void Lexer::skipWhitespace() {
     while (std::isspace(peek())) get();
 }
 
-void Lexer::skipComment() {
-    // You can implement single-line or multi-line comments if needed
-}
-
 Token Lexer::identifierOrKeyword() {
     int startCol = column;
     std::string lexeme;
@@ -91,13 +87,20 @@ Token Lexer::stringLiteral() {
 
 Token Lexer::relOp() {
     int startCol = column;
-    std::string lexeme;
     char c = get();
-    lexeme += c;
-    if ((c == '<' || c == '>' || c == '=' || c == '!') && peek() == '=') {
+    std::string lexeme(1, c);
+
+    // Handle two-character operators
+    if (peek() == '=' && (c == '<' || c == '>' || c == '=' || c == '!')) {
         lexeme += get();
+        return Token(TokenType::REL_OP, lexeme, line, startCol);
     }
-    return Token(TokenType::REL_OP, lexeme, line, startCol);
+    // Handle valid single-character operators
+    else if (c == '<' || c == '>') {
+        return Token(TokenType::REL_OP, lexeme, line, startCol);
+    }
+    // Handle invalid cases
+    return Token(TokenType::INVALID, lexeme, line, startCol);
 }
 
 std::vector<Token> Lexer::tokenize() {
@@ -120,9 +123,24 @@ std::vector<Token> Lexer::tokenize() {
         else if (c == '"') {
             tokens.push_back(stringLiteral());
         }
-        else if (c == '=' || c == '<' || c == '>' || c == '!') {
-            tokens.push_back(relOp());
-        }
+        else if (c == '=')
+        {
+            get();
+            if (peek() == '=')
+            {
+                get();
+                tokens.push_back(Token(TokenType::REL_OP, "==", line, column));
+            }
+            else
+            {
+                tokens.push_back(Token(TokenType::ASSIGN, "=", line, column));
+            }
+            }
+            else if (c == '<' || c == '>' || c == '!')
+            {
+                tokens.push_back(relOp());
+            }
+
         else if (c == '\n') {
             get();
             tokens.emplace_back(TokenType::END_OF_LINE, "\\n", line - 1, 1);

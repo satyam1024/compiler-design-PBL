@@ -1,6 +1,9 @@
 #include "SemanticAnalyzer.h"
 #include <sstream>
 
+// Add BOOLEAN to VarType (if not already in your headers)
+// enum class VarType { NUMBER, STRING, BOOLEAN, UNKNOWN };
+
 SemanticAnalyzer::SemanticAnalyzer() {}
 
 void SemanticAnalyzer::analyze(const Program* program) {
@@ -48,37 +51,36 @@ void SemanticAnalyzer::analyzeStatement(const Statement* stmt) {
 
     // Binary Operation
     if (auto binOp = dynamic_cast<const BinOpStmt*>(stmt)) {
-    VarType leftType = VarType::UNKNOWN;
-    VarType rightType = VarType::UNKNOWN;
+        VarType leftType = VarType::UNKNOWN;
+        VarType rightType = VarType::UNKNOWN;
 
-    if (!isVariableDeclared(binOp->left)) {
-        errors.push_back("Line " + std::to_string(stmt->line) + ": Variable '" + binOp->left + "' not declared.");
-    } else {
-        leftType = getVariableType(binOp->left);
+        if (!isVariableDeclared(binOp->left)) {
+            errors.push_back("Line " + std::to_string(stmt->line) + ": Variable '" + binOp->left + "' not declared.");
+        } else {
+            leftType = getVariableType(binOp->left);
+        }
+
+        if (!isVariableDeclared(binOp->right)) {
+            errors.push_back("Line " + std::to_string(stmt->line) + ": Variable '" + binOp->right + "' not declared.");
+        } else {
+            rightType = getVariableType(binOp->right);
+        }
+
+        // Type checking logic
+        if (leftType != VarType::NUMBER || rightType != VarType::NUMBER) {
+            std::stringstream ss;
+            ss << "Line " << stmt->line << ": Cannot perform binary operation on types ";
+            ss << varTypeToString(leftType) << " and " << varTypeToString(rightType) << ".";
+            errors.push_back(ss.str());
+        }
+
+        // Result variable: declare if not already
+        if (!isVariableDeclared(binOp->result)) {
+            declareVariable(binOp->result, VarType::NUMBER, stmt->line);
+        }
+
+        return;
     }
-
-    if (!isVariableDeclared(binOp->right)) {
-        errors.push_back("Line " + std::to_string(stmt->line) + ": Variable '" + binOp->right + "' not declared.");
-    } else {
-        rightType = getVariableType(binOp->right);
-    }
-
-    // ❗ Type checking logic
-    if (leftType != VarType::NUMBER || rightType != VarType::NUMBER) {
-        std::stringstream ss;
-        ss << "Line " << stmt->line << ": Cannot perform binary operation on types ";
-        ss << varTypeToString(leftType) << " and " << varTypeToString(rightType) << ".";
-        errors.push_back(ss.str());
-    }
-
-    // Result variable: declare if not already
-    if (!isVariableDeclared(binOp->result)) {
-        declareVariable(binOp->result, VarType::NUMBER, stmt->line);
-    }
-
-    return;
-}
-
 
     // If Statement
     if (auto ifStmt = dynamic_cast<const IfStmt*>(stmt)) {
@@ -143,20 +145,28 @@ void SemanticAnalyzer::analyzeExpression(const Expression* expr, VarType& outTyp
     }
 
     if (auto rel = dynamic_cast<const RelOpExpr*>(expr)) {
-        // Check both sides
-        VarType leftType = VarType::UNKNOWN, rightType = VarType::UNKNOWN;
-        if (!isVariableDeclared(rel->left)) {
-            errors.push_back("Line " + std::to_string(expr->line) + ": Variable '" + rel->left + "' not declared.");
+        VarType leftType = VarType::UNKNOWN;
+        VarType rightType = VarType::UNKNOWN;
+
+        analyzeExpression(rel->left.get(), leftType);
+        analyzeExpression(rel->right.get(), rightType);
+
+        bool valid = false;
+        if (rel->op == "==" || rel->op == "!=") {
+            valid = (leftType == rightType) &&
+                    (leftType == VarType::NUMBER || leftType == VarType::STRING);
         } else {
-            leftType = getVariableType(rel->left);
+            // <, >, <=, >=
+            valid = (leftType == VarType::NUMBER && rightType == VarType::NUMBER);
         }
-        if (!isVariableDeclared(rel->right)) {
-            errors.push_back("Line " + std::to_string(expr->line) + ": Variable '" + rel->right + "' not declared.");
-        } else {
-            rightType = getVariableType(rel->right);
+        if (!valid) {
+            std::stringstream ss;
+            ss << "Line " << expr->line << ": Cannot compare " << varTypeToString(leftType)
+               << " and " << varTypeToString(rightType) << " using relational operator '" << rel->op << "'.";
+            errors.push_back(ss.str());
         }
-        // For now, no type check on relational operator
-        outType = VarType::NUMBER;
+
+        outType = VarType::BOOLEAN;
         return;
     }
 
@@ -185,6 +195,7 @@ std::string varTypeToString(VarType type) {
     switch (type) {
         case VarType::NUMBER: return "NUMBER";
         case VarType::STRING: return "STRING";
+        case VarType::BOOLEAN: return "BOOLEAN";
         case VarType::UNKNOWN: return "UNKNOWN";
         default: return "INVALID";
     }

@@ -129,7 +129,7 @@ output a`
           <div className="flex-1 overflow-y-auto">
             <CompilationTabs data={compilationData} />
           </div>
-          <div className="h-48 mb-8 overflow-y-auto border-t border-gray-700">
+          <div className="h-56 mb-4 overflow-y-auto border-t border-gray-700">
             <TerminalA />
           </div>
         </section>

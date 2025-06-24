@@ -1,9 +1,9 @@
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include <vector>
 #include <string>
 #include <sstream>
-#include <cstdlib> // for system()
 
 #include "Lexer.h"
 #include "Parser.h"
@@ -11,6 +11,9 @@
 #include "IntermediateCodeGen.h"
 #include "Optimizer.h"
 #include "CodeGenerator.h"
+
+namespace fs = std::filesystem;
+
 
 std::string irInstructionToString(const IRInstruction& instr) {
     std::stringstream ss;
@@ -25,7 +28,7 @@ std::string irInstructionToString(const IRInstruction& instr) {
     return ss.str();
 }
 
-void writeToFile(const std::string& path, const std::string& content) {
+void writeToFile(const fs::path& path, const std::string& content) {
     std::ofstream out(path);
     if (out.is_open()) {
         out << content;
@@ -35,12 +38,12 @@ void writeToFile(const std::string& path, const std::string& content) {
 std::string vectorToString(const std::vector<IRInstruction>& vec) {
     std::stringstream ss;
     for (const auto& instr : vec) {
-        ss << irInstructionToString(instr) << "\n";
+        ss << irInstructionToString(instr) << "\n";  // assuming IRInstruction has a toString() method
     }
     return ss.str();
 }
 
-void writeListToFile(const std::string& path, const std::vector<std::string>& lines) {
+void writeListToFile(const fs::path& path, const std::vector<std::string>& lines) {
     std::ofstream out(path);
     if (out.is_open()) {
         for (const auto& line : lines) {
@@ -50,45 +53,26 @@ void writeListToFile(const std::string& path, const std::vector<std::string>& li
 }
 
 int main(int argc, char* argv[]) {
-    std::string code;
-    std::string outputDir;
-
-    // Interactive input
-    if (argc == 1) {
-        std::cout << "Type your code below. Type END on a new line to finish input:\n";
-        std::string line;
-        while (true) {
-            std::getline(std::cin, line);
-            if (line == "END") break;
-            code += line + "\n";
-        }
-
-        std::cout << "Enter output directory name: ";
-        std::getline(std::cin, outputDir);
-
-        // create output dir using system command (cross-platform safe for basic cases)
-        system(("mkdir " + outputDir).c_str());
-    }
-    // File input
-    else if (argc >= 3) {
-        std::string inputPath = argv[1];
-        outputDir = argv[2];
-
-        std::ifstream inFile(inputPath);
-        if (!inFile.is_open()) {
-            std::cerr << "Failed to open input file.\n";
-            return 1;
-        }
-
-        code = std::string((std::istreambuf_iterator<char>(inFile)),
-                           std::istreambuf_iterator<char>());
-        system(("mkdir " + outputDir).c_str());
-    }
-    else {
-        std::cerr << "Usage: compiler.exe <input_file> <output_dir>\n"
-                  << "Or just run without arguments for interactive mode.\n";
+    if (argc < 3) {
+        std::cerr << "Usage: compiler.exe <input_file> <output_dir>\n";
         return 1;
     }
+
+    std::string inputPath = argv[1];
+    std::string outputDir = argv[2];
+
+    // Read input code
+    std::ifstream inFile(inputPath);
+    if (!inFile.is_open()) {
+        std::cerr << "Failed to open input file.\n";
+        return 1;
+    }
+
+    std::string code((std::istreambuf_iterator<char>(inFile)),
+                     std::istreambuf_iterator<char>());
+
+    // Ensure output directory exists
+    fs::create_directories(outputDir);
 
     std::vector<std::string> errors;
     std::string ccode;
@@ -109,8 +93,8 @@ int main(int argc, char* argv[]) {
                              ", column " + std::to_string(token.column) + ": Invalid token '" + token.lexeme + "'");
         }
     }
-
-    writeToFile(outputDir + "/tokens.txt", tokenStream.str());
+    
+    writeToFile(fs::path(outputDir) / "tokens.txt", tokenStream.str());
 
     // --- PARSER ---
     Parser parser(tokens);
@@ -126,33 +110,38 @@ int main(int argc, char* argv[]) {
 
     // Write errors
     if (!errors.empty()) {
-        writeListToFile(outputDir + "/errors.txt", errors);
-        writeToFile(outputDir + "/c_code.txt", "// No C code generated due to errors.\n");
+        writeListToFile(fs::path(outputDir) / "errors.txt", errors);
+        writeToFile(fs::path(outputDir) / "c_code.txt", "// No C code generated due to errors.\n");
         return 0;
     } else {
-        writeListToFile(outputDir + "/errors.txt", { "No errors." });
+        writeListToFile(fs::path(outputDir) / "errors.txt", { "No errors." });
     }
 
     // --- INTERMEDIATE CODE GEN ---
     IntermediateCodeGen icg;
     icg.generate(ast.get());
     irCode = icg.getIR();
-    writeToFile(outputDir + "/ir.txt", vectorToString(irCode));
+    std::string irstr = vectorToString(irCode);
+    writeToFile(fs::path(outputDir) / "ir.txt", irstr);
 
     // --- OPTIMIZATION ---
     Optimizer optimizer;
     optimizer.optimize(irCode);
     optimizedIR = optimizer.getOptimizedIR();
-    writeToFile(outputDir + "/optimized_ir.txt", vectorToString(optimizedIR));
+    std::string oIrstr = vectorToString(optimizedIR);
+    writeToFile(fs::path(outputDir) / "optimized_ir.txt", oIrstr);
 
     // --- CODE GENERATION ---
     CodeGenerator codegen;
     codegen.generate(optimizedIR);
     ccode = codegen.getCCode();
-    writeToFile(outputDir + "/c_code.txt", ccode);
+    writeToFile(fs::path(outputDir) / "c_code.txt", ccode);
 
     // Optional: simulated final program output
-    writeToFile(outputDir + "/output.txt", "Program compiled successfully.");
+    writeToFile(fs::path(outputDir) / "output.txt", "Program compiled successfully.");
 
     return 0;
 }
+
+
+

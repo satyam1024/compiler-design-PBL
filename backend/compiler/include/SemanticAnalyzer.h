@@ -8,7 +8,8 @@
 #include <memory>
 
 // For simplicity, we use a basic type system: NUMBER, STRING, UNKNOWN
-enum class VarType { NUMBER, STRING, UNKNOWN };
+enum class VarType { NUMBER, STRING, BOOLEAN, UNKNOWN };
+
 
 struct VariableInfo {
     VarType type;

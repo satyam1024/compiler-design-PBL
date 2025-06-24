@@ -80,9 +80,9 @@ struct StringLiteral : public Expression {
 };
 
 struct RelOpExpr : public Expression {
-    std::string left;
-    std::string op;
-    std::string right;
+    std::unique_ptr<Expression> left;
+    std::string op; // e.g., "<", "==", etc.
+    std::unique_ptr<Expression> right;
 };
 
 // Program root

@@ -25,6 +25,9 @@ public:
 private:
     std::vector<IRInstruction> ir;
 
+    std::string relOpToOpcode(const std::string& op);
+
+
     void genStatement(const Statement* stmt);
     void genExpression(const Expression* expr, std::string& result);
 

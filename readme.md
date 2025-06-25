@@ -154,33 +154,33 @@ Codepie supports type interference so you don't need to explicitly declare the t
     divide total and count store in avg
 ```
 
-    #### **Control Flow**
-    ➤ Conditional Statements
+#### **Control Flow**
+➤ Conditional Statements
+    ```
+    if x < y then
+        output "x is less"
+    otherwise
+        output "x is not less"
+    ```
+
+    Supports:
+
+        - Simple if
+        - otherwise as else
+        - else if as else if chain with another if
+
+➤ Loops
+    1. Counting Loop (like a for loop):
         ```
-        if x < y then
-            output "x is less"
-        otherwise
-            output "x is not less"
+        repeat from i = 1 to 10 jump 1
+            output i
         ```
 
-        Supports:
-
-            - Simple if
-            - otherwise as else
-            - else if as else if chain with another if
-
-    ➤ Loops
-        1. Counting Loop (like a for loop):
-            ```
-            repeat from i = 1 to 10 jump 1
-                output i
-            ```
-
-        2. Conditional Loop (like a while loop):
-            ```
-            repeat until x < 5
-                output x
-            ```
+    2. Conditional Loop (like a while loop):
+        ```
+        repeat until x < 5
+            output x
+        ```
 
 ### **Expressions**
     - Relational Operators: <, >, <=, >=, ==, !=

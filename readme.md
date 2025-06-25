@@ -182,13 +182,13 @@ Supports:
     ```
 
 ### **Expressions**
-    - Relational Operators: <, >, <=, >=, ==, !=
-    - Operands: Identifiers, Numbers, Strings
+- Relational Operators: <, >, <=, >=, ==, !=
+- Operands: Identifiers, Numbers, Strings
 
-    Example:
-    ```
-    if a == b then ...
-    ```
+Example:
+```
+if a == b then ...
+```
 
 ### **Error Handling**
 - Unexpected tokens and syntax mismatches are reported with line numbers.

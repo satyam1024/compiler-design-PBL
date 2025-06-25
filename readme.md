@@ -77,7 +77,7 @@ compiler-design-PBL/
 
 ![Screenshot 1](assets/screenshot_2.png)
 ![Screenshot 2](assets/screenshot_1.png)
-
+#### **Video Deonstration**
 [![Demo](assets/screenshot_1.png)](assets/Codepie_demonstration.mp4)
 
 ## **Getting Started**
@@ -130,29 +130,38 @@ Codepie supports type interference so you don't need to explicitly declare the t
 
 ### **Statements Supported**
 ➤ Variable Declaration
+```
     let x be 10
     let name be "Gautam"
+```
 
 ➤ Input Statement
+```
     input value
+```
 
 ➤ Output Statement
+```
     output x
     output "Hello, World"
+```
 
 ➤ Arithmetic Operations
+```
     add a and b store in result
     subtract x and y store in diff
     multiply p and q store in product
     divide total and count store in avg
+```
 
-    ####Control Flow
+    #### **Control Flow**
     ➤ Conditional Statements
-
+        ```
         if x < y then
             output "x is less"
         otherwise
             output "x is not less"
+        ```
 
         Supports:
 
@@ -162,19 +171,25 @@ Codepie supports type interference so you don't need to explicitly declare the t
 
     ➤ Loops
         1. Counting Loop (like a for loop):
+            ```
             repeat from i = 1 to 10 jump 1
                 output i
+            ```
 
         2. Conditional Loop (like a while loop):
+            ```
             repeat until x < 5
                 output x
+            ```
 
 ### **Expressions**
     - Relational Operators: <, >, <=, >=, ==, !=
     - Operands: Identifiers, Numbers, Strings
 
     Example:
+    ```
     if a == b then ...
+    ```
 
 ### **Error Handling**
 - Unexpected tokens and syntax mismatches are reported with line numbers.

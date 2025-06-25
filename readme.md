@@ -1,9 +1,9 @@
 # **Compiler for Custom Programming Language**
 
-##**Description**
+## **Description**
 This project is a Compiler for our own Programming language named "Codepie". The compiler is built using c++. It also includes a fully functional Graphical User Interface (GUI) built using Vite and React, allowing users to write code in Codepie and view tokens, errors, Intermediate Representation(IR), Optimized IR, Corresponding C code and the output in different sections all within the GUI environment. The Compiler also allows the Generated code to be executed directly from the interface.
 
-##**Features**
+## **Features**
 
 - Custom Programming language: A new simple to use and understand language "Codepie".
 - Lexical Analysis: Tokenization of the Codepie code.
@@ -15,8 +15,9 @@ This project is a Compiler for our own Programming language named "Codepie". The
 - Execution Support: Executes the generated C code directly from the GUI interface.
 - User Interface: A fully functional GUI built using Vite and React for interacting with the user.
 
-##**Project Structure**
+## **Project Structure**
 
+```
 compiler-design-PBL/
 ├── backend/
 │   └── compiler/
@@ -70,17 +71,18 @@ compiler-design-PBL/
 │   ├── vite.config.js                # Vite configuration
 │   ├── README.md                     # Frontend-specific documentation
 └── readme.md                         # (global README)
+```
 
-##**Screenshots And Videos**
+## **Screenshots And Videos**
 
 ![Screenshot 1](assets/screenshot_2.png)
 ![Screenshot 2](assets/screenshot_1.png)
 
 [![Demo](assets/screenshot_1.png)](assets/Codepie_demonstration.mp4)
 
-##**Getting Started**
+## **Getting Started**
 
-###**Prerequisites**
+### **Prerequisites**
 Make sure the following are installed on your system:
 
 - For Backend (C++ Compiler)
@@ -96,7 +98,7 @@ Make sure the following are installed on your system:
 
 - Modern Browser (e.g., Chrome, Edge, Firefox)
 
-###**Build Instructions**
+### **Build Instructions**
 
 1. Navigate to the folder compiler-design-PBL by using the command `cd compiler-design-PBL`
 2. Clone the repository using `git clone -b compiler_final https://github.com/satyam1024/compiler-design-PBL.git`
@@ -109,11 +111,11 @@ Make sure the following are installed on your system:
 9. then run `nodemon server.js` to start the server
 10. open the browser tab where the frontend is running and use the UI to write the code in codepie.
 
-##**Language Specification**
+## **Language Specification**
 
 This section defines the syntax and semantics of codepie supported by our compiler.
 
-###**Keywords**
+### **Keywords**
 | Category                  | Keywords                                                      |
 | ------------------------- | ------------------------------------------------------------- |
 | **Variable Declaration**  | `let`, `be`                                                   |
@@ -123,10 +125,10 @@ This section defines the syntax and semantics of codepie supported by our compil
 | **Looping**               | `repeat`, `from`, `to`, `jump`, `until`                       |
 
 
-###**Datatypes**
+### **Datatypes**
 Codepie supports type interference so you don't need to explicitly declare the type of a variable.
 
-###**Statements Supported**
+### **Statements Supported**
 ➤ Variable Declaration
     let x be 10
     let name be "Gautam"
@@ -167,20 +169,20 @@ Codepie supports type interference so you don't need to explicitly declare the t
             repeat until x < 5
                 output x
 
-###**Expressions**
+### **Expressions**
     - Relational Operators: <, >, <=, >=, ==, !=
     - Operands: Identifiers, Numbers, Strings
 
     Example:
     if a == b then ...
 
-###**Error Handling**
+### **Error Handling**
 - Unexpected tokens and syntax mismatches are reported with line numbers.
 - Unterminated strings, missing keywords, and invalid expressions generate descriptive error messages
 
-##**Sample Programs**
+## **Sample Programs**
 
-###**Sample 1**
+### **Sample 1**
     let a be "Hello"
     let b be 10
     let c be 10.5
@@ -188,7 +190,7 @@ Codepie supports type interference so you don't need to explicitly declare the t
     output b
     output c
 
-###**Sample 2**
+### **Sample 2**
     let a be 10.5
     let b be 20.5
     add a and b store in sum
@@ -200,19 +202,19 @@ Codepie supports type interference so you don't need to explicitly declare the t
     output c
     output d
 
-###**Sample 3**
+### **Sample 3**
     let a be "Hello"
     let b be "World"
     add a and b store in sum
     output sum
 
-###**Sample 4**
+### **Sample 4**
     let a be "Hello"
     let b be 20
     add a and b store in sum
     output sum
 
-###**Sample 5**
+### **Sample 5**
     let a be 10
     let b be 5
     if a>b then
@@ -220,18 +222,18 @@ Codepie supports type interference so you don't need to explicitly declare the t
     otherwise
         output b
 
-###**Sample 6**
+### **Sample 6**
     repeat from i=1 to 15 jump 3
         output i
 
-##**Technologies Used**
+## **Technologies Used**
 - C++ - Core compiler Logic
 - Node.js - Server to bridge frontend and compiler
 - React+Vite - Fast and mordern UI for code editing and output display
 - HTML/CSS/JS – UI styling and interactions
 - npm - Dependency management for server and frontend
 
-##**Output Sections (in UI)**
+## **Output Sections (in UI)**
 - Tokens
 - Errors
 - Intermediate Representation
@@ -239,8 +241,8 @@ Codepie supports type interference so you don't need to explicitly declare the t
 - Generated C Code
 - Program Output
 
-##**Team - "The Resilient Coders"**
-- Team Lead : [Gautam Saxena](https://github.com/gautam-saxena)
+## **Team - "The Resilient Coders"**
+- Team Lead : [Gautam Saxena](https://github.com/GautamSaxena703)
 - Team member 1 : [Satyam Kathait](https://github.com/satyam1024)
 - Team member 2 : [Gaurav Singh](https://github.com/GauravSinghhhh)
 - Team member 3 : [Abhishek Kamboj](https://github.com/Abhishek130900)

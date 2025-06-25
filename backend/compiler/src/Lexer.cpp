@@ -76,12 +76,12 @@ Token Lexer::number() {
 Token Lexer::stringLiteral() {
     int startCol = column;
     std::string lexeme;
-    get(); // consume the opening quote
+    get(); 
     while (peek() != '"' && peek() != '\0') {
         lexeme += get();
     }
-    if (peek() == '"') get(); // consume closing quote
-    else return Token(TokenType::INVALID, lexeme, line, startCol); // Unterminated string
+    if (peek() == '"') get(); 
+    else return Token(TokenType::INVALID, lexeme, line, startCol); 
     return Token(TokenType::STRING, lexeme, line, startCol);
 }
 
@@ -90,16 +90,13 @@ Token Lexer::relOp() {
     char c = get();
     std::string lexeme(1, c);
 
-    // Handle two-character operators
     if (peek() == '=' && (c == '<' || c == '>' || c == '=' || c == '!')) {
         lexeme += get();
         return Token(TokenType::REL_OP, lexeme, line, startCol);
     }
-    // Handle valid single-character operators
     else if (c == '<' || c == '>') {
         return Token(TokenType::REL_OP, lexeme, line, startCol);
     }
-    // Handle invalid cases
     return Token(TokenType::INVALID, lexeme, line, startCol);
 }
 
@@ -146,8 +143,7 @@ std::vector<Token> Lexer::tokenize() {
             tokens.emplace_back(TokenType::END_OF_LINE, "\\n", line - 1, 1);
         }
         else {
-            // Handle other single-character tokens if needed
-            get(); // skip unknown character
+            get(); 
             tokens.emplace_back(TokenType::INVALID, std::string(1, c), line, column);
         }
     }

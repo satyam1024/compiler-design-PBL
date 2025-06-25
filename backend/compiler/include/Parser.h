@@ -6,37 +6,30 @@
 #include <vector>
 #include <string>
 
-// AST Node base
 struct ASTNode {
     virtual ~ASTNode() = default;
     int line;
     int column;
 };
 
-// Statement nodes
 struct Statement : public ASTNode {};
 struct Expression : public ASTNode {};
 
-// Variable declaration: let a be 10
 struct VarDecl : public Statement {
     std::string varName;
     std::unique_ptr<Expression> value;
 };
 
-// Assignment: let a be 10 (same as VarDecl in your language)
 using Assignment = VarDecl;
 
-// Input: input a
 struct InputStmt : public Statement {
     std::string varName;
 };
 
-// Output: output a or output "Hello"
 struct OutputStmt : public Statement {
     std::unique_ptr<Expression> value;
 };
 
-// Binary Operation: add a and b store in c, etc.
 enum class BinOpType { ADD, SUBTRACT, MULTIPLY, DIVIDE };
 struct BinOpStmt : public Statement {
     BinOpType op;
@@ -45,7 +38,6 @@ struct BinOpStmt : public Statement {
     std::string result;
 };
 
-// If-Else
 struct IfStmt : public Statement {
     std::unique_ptr<Expression> condition;
     std::vector<std::unique_ptr<Statement>> thenBranch;
@@ -53,20 +45,16 @@ struct IfStmt : public Statement {
     std::vector<std::unique_ptr<Statement>> elseBranch;
 };
 
-// Repeat loop
 struct RepeatStmt : public Statement {
-    // For: repeat from i=0 to 10 jump 1
     std::string varName;
     std::unique_ptr<Expression> start;
     std::unique_ptr<Expression> end;
     std::unique_ptr<Expression> jump;
     std::vector<std::unique_ptr<Statement>> body;
 
-    // Until: repeat until a<b
     std::unique_ptr<Expression> untilCondition;
 };
 
-// Expressions
 struct Identifier : public Expression {
     std::string name;
 };
@@ -81,16 +69,14 @@ struct StringLiteral : public Expression {
 
 struct RelOpExpr : public Expression {
     std::unique_ptr<Expression> left;
-    std::string op; // e.g., "<", "==", etc.
+    std::string op; 
     std::unique_ptr<Expression> right;
 };
 
-// Program root
 struct Program : public ASTNode {
     std::vector<std::unique_ptr<Statement>> statements;
 };
 
-// Parser class
 class Parser {
 public:
     Parser(const std::vector<Token>& tokens);
@@ -121,4 +107,4 @@ private:
     std::unique_ptr<Expression> parsePrimary();
 };
 
-#endif // PARSER_H
+#endif 

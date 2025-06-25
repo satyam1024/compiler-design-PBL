@@ -12,7 +12,6 @@ std::string promote(const std::string& t1, const std::string& t2) {
     return "int";
 }
 
-// Helper: check if a string is a valid C identifier
 bool CodeGenerator::isIdentifier(const std::string& s) const {
     if (s.empty()) return false;
     if (!(isalpha(s[0]) || s[0] == '_')) return false;
@@ -29,7 +28,6 @@ void CodeGenerator::generate(const std::vector<IRInstruction>& ir) {
     std::ostringstream oss;
     oss << "#include <stdio.h>\n\nint main() {\n";
 
-    // First pass: determine variable types
     for (const auto& instr : ir) {
         if (instr.opcode == "ASSIGN" && instr.operands.size() == 2) {
             declareVar(instr.operands[1], instr.operands[0]);
@@ -44,13 +42,12 @@ void CodeGenerator::generate(const std::vector<IRInstruction>& ir) {
                     instr.opcode == "GT" || instr.opcode == "GE" ||
                     instr.opcode == "EQ" || instr.opcode == "NE") &&
                    instr.operands.size() == 3) {
-            declaredVars[instr.operands[2]] = "int"; // Relational results are int (boolean)
+            declaredVars[instr.operands[2]] = "int"; 
         } else if (instr.opcode == "INPUT" && instr.operands.size() == 1) {
             declareVar(instr.operands[0], "");
         }
     }
 
-    // Declare variables (only for valid C identifiers)
     for (const auto& entry : declaredVars) {
         const std::string& var = entry.first;
         const std::string& type = entry.second;
@@ -58,7 +55,6 @@ void CodeGenerator::generate(const std::vector<IRInstruction>& ir) {
             oss << "    " << type << " " << var << " = 0;\n";
     }
 
-    // Second pass: emit code
     for (const auto& instr : ir) {
         if (instr.opcode == "ASSIGN" && instr.operands.size() == 2) {
             oss << "    " << instr.operands[1] << " = " << instr.operands[0] << ";\n";
@@ -99,7 +95,6 @@ void CodeGenerator::generate(const std::vector<IRInstruction>& ir) {
                 else if (type == "const char*")
                     oss << "    printf(\"%s\\n\", " << var << ");\n";
             } else {
-                // fallback
                 oss << "    printf(\"%lf\\n\", " << var << ");\n";
             }
         } else if (instr.opcode == "LABEL" && instr.operands.size() == 1) {
@@ -121,7 +116,7 @@ void CodeGenerator::declareVar(const std::string& var, const std::string& value)
     if (var.empty() || declaredVars.count(var)) return;
 
     if (value.empty()) {
-        declaredVars[var] = "double"; // fallback
+        declaredVars[var] = "double"; 
         return;
     }
 
@@ -132,9 +127,9 @@ void CodeGenerator::declareVar(const std::string& var, const std::string& value)
     } else if (isDouble(value)) {
         declaredVars[var] = "double";
     } else if (declaredVars.count(value)) {
-        declaredVars[var] = declaredVars[value]; // copy from other variable
+        declaredVars[var] = declaredVars[value];
     } else {
-        declaredVars[var] = "double"; // default
+        declaredVars[var] = "double";
     }
 }
 

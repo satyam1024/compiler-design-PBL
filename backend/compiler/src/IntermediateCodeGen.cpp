@@ -19,7 +19,6 @@ std::string IntermediateCodeGen::newTemp() {
     return "_t" + std::to_string(tempVarCounter++);
 }
 
-// Helper function for relational opcodes
 std::string IntermediateCodeGen::relOpToOpcode(const std::string& op) {
     if (op == "==") return "EQ";
     if (op == "!=") return "NE";
@@ -33,7 +32,6 @@ std::string IntermediateCodeGen::relOpToOpcode(const std::string& op) {
 void IntermediateCodeGen::genStatement(const Statement* stmt) {
     if (!stmt) return;
 
-    // Variable Declaration / Assignment
     if (auto varDecl = dynamic_cast<const VarDecl*>(stmt)) {
         std::string rhs;
         genExpression(varDecl->value.get(), rhs);
@@ -41,13 +39,11 @@ void IntermediateCodeGen::genStatement(const Statement* stmt) {
         return;
     }
 
-    // Input Statement
     if (auto inputStmt = dynamic_cast<const InputStmt*>(stmt)) {
         ir.emplace_back("INPUT", std::vector<std::string>{inputStmt->varName}, stmt->line);
         return;
     }
 
-    // Output Statement
     if (auto outputStmt = dynamic_cast<const OutputStmt*>(stmt)) {
         std::string val;
         genExpression(outputStmt->value.get(), val);
@@ -55,7 +51,6 @@ void IntermediateCodeGen::genStatement(const Statement* stmt) {
         return;
     }
 
-    // Binary Operation
     if (auto binOp = dynamic_cast<const BinOpStmt*>(stmt)) {
         std::string opStr;
         switch (binOp->op) {
@@ -68,7 +63,6 @@ void IntermediateCodeGen::genStatement(const Statement* stmt) {
         return;
     }
 
-    // If Statement
     if (auto ifStmt = dynamic_cast<const IfStmt*>(stmt)) {
         std::string cond;
         genExpression(ifStmt->condition.get(), cond);
@@ -76,21 +70,17 @@ void IntermediateCodeGen::genStatement(const Statement* stmt) {
         std::string labelEnd = "L" + std::to_string(tempVarCounter++);
         ir.emplace_back("JZ", std::vector<std::string>{cond, labelElse}, stmt->line);
 
-        // Generate THEN branch
         for (const auto& s : ifStmt->thenBranch) genStatement(s.get());
         ir.emplace_back("JMP", std::vector<std::string>{labelEnd}, stmt->line);
 
-        // Generate ELSE branch
         ir.emplace_back("LABEL", std::vector<std::string>{labelElse}, stmt->line);
-        for (const auto& s : ifStmt->elseBranch) genStatement(s.get());  // FIX: Add else branch here
+        for (const auto& s : ifStmt->elseBranch) genStatement(s.get());  
 
         ir.emplace_back("LABEL", std::vector<std::string>{labelEnd}, stmt->line);
         return;
     }
 
-    // Repeat Statement
     if (auto repeatStmt = dynamic_cast<const RepeatStmt*>(stmt)) {
-        // For loop: repeat from i=0 to 10 jump 1
         if (!repeatStmt->varName.empty()) {
             std::string startVal, endVal, jumpVal;
             genExpression(repeatStmt->start.get(), startVal);
@@ -103,14 +93,12 @@ void IntermediateCodeGen::genStatement(const Statement* stmt) {
             std::string labelEnd = "L" + std::to_string(tempVarCounter++);
             ir.emplace_back("LABEL", std::vector<std::string>{labelStart}, stmt->line);
 
-            // Condition: var <= end
             std::string condTemp = newTemp();
             ir.emplace_back("LE", std::vector<std::string>{repeatStmt->varName, endVal, condTemp}, stmt->line);
             ir.emplace_back("JZ", std::vector<std::string>{condTemp, labelEnd}, stmt->line);
 
             for (const auto& s : repeatStmt->body) genStatement(s.get());
 
-            // i = i + jump
             std::string incTemp = newTemp();
             ir.emplace_back("ADD", std::vector<std::string>{repeatStmt->varName, jumpVal, incTemp}, stmt->line);
             ir.emplace_back("ASSIGN", std::vector<std::string>{incTemp, repeatStmt->varName}, stmt->line);
@@ -118,7 +106,6 @@ void IntermediateCodeGen::genStatement(const Statement* stmt) {
             ir.emplace_back("JMP", std::vector<std::string>{labelStart}, stmt->line);
             ir.emplace_back("LABEL", std::vector<std::string>{labelEnd}, stmt->line);
         }
-        // While-like: repeat until a < b
         else if (repeatStmt->untilCondition) {
             std::string labelStart = "L" + std::to_string(tempVarCounter++);
             std::string labelEnd = "L" + std::to_string(tempVarCounter++);

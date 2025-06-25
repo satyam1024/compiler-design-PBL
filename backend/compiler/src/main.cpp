@@ -38,7 +38,7 @@ void writeToFile(const fs::path& path, const std::string& content) {
 std::string vectorToString(const std::vector<IRInstruction>& vec) {
     std::stringstream ss;
     for (const auto& instr : vec) {
-        ss << irInstructionToString(instr) << "\n";  // assuming IRInstruction has a toString() method
+        ss << irInstructionToString(instr) << "\n";  
     }
     return ss.str();
 }
@@ -61,7 +61,6 @@ int main(int argc, char* argv[]) {
     std::string inputPath = argv[1];
     std::string outputDir = argv[2];
 
-    // Read input code
     std::ifstream inFile(inputPath);
     if (!inFile.is_open()) {
         std::cerr << "Failed to open input file.\n";
@@ -71,7 +70,6 @@ int main(int argc, char* argv[]) {
     std::string code((std::istreambuf_iterator<char>(inFile)),
                      std::istreambuf_iterator<char>());
 
-    // Ensure output directory exists
     fs::create_directories(outputDir);
 
     std::vector<std::string> errors;
@@ -79,7 +77,6 @@ int main(int argc, char* argv[]) {
     std::vector<IRInstruction> irCode;
     std::vector<IRInstruction> optimizedIR;
 
-    // --- LEXER ---
     Lexer lexer(code);
     auto tokens = lexer.tokenize();
     std::ostringstream tokenStream;
@@ -96,19 +93,16 @@ int main(int argc, char* argv[]) {
     
     writeToFile(fs::path(outputDir) / "tokens.txt", tokenStream.str());
 
-    // --- PARSER ---
     Parser parser(tokens);
     auto ast = parser.parse();
     auto parseErrors = parser.getErrors();
     errors.insert(errors.end(), parseErrors.begin(), parseErrors.end());
 
-    // --- SEMANTIC ANALYZER ---
     SemanticAnalyzer sema;
     sema.analyze(ast.get());
     auto semaErrors = sema.getErrors();
     errors.insert(errors.end(), semaErrors.begin(), semaErrors.end());
 
-    // Write errors
     if (!errors.empty()) {
         writeListToFile(fs::path(outputDir) / "errors.txt", errors);
         writeToFile(fs::path(outputDir) / "c_code.txt", "// No C code generated due to errors.\n");
@@ -117,27 +111,23 @@ int main(int argc, char* argv[]) {
         writeListToFile(fs::path(outputDir) / "errors.txt", { "No errors." });
     }
 
-    // --- INTERMEDIATE CODE GEN ---
     IntermediateCodeGen icg;
     icg.generate(ast.get());
     irCode = icg.getIR();
     std::string irstr = vectorToString(irCode);
     writeToFile(fs::path(outputDir) / "ir.txt", irstr);
 
-    // --- OPTIMIZATION ---
     Optimizer optimizer;
     optimizer.optimize(irCode);
     optimizedIR = optimizer.getOptimizedIR();
     std::string oIrstr = vectorToString(optimizedIR);
     writeToFile(fs::path(outputDir) / "optimized_ir.txt", oIrstr);
 
-    // --- CODE GENERATION ---
     CodeGenerator codegen;
     codegen.generate(optimizedIR);
     ccode = codegen.getCCode();
     writeToFile(fs::path(outputDir) / "c_code.txt", ccode);
 
-    // Optional: simulated final program output
     writeToFile(fs::path(outputDir) / "output.txt", "Program compiled successfully.");
 
     return 0;

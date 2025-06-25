@@ -16,17 +16,14 @@ private:
     std::string cCode;
     bool isIdentifier(const std::string& s) const;
 
-    // ✅ Change from set<string> to map<string, string> to store variable types
     std::unordered_map<std::string, std::string> declaredVars;
 
-    // ✅ Modified declareVar to take assigned value for type inference
     void declareVar(const std::string& var, const std::string& value);
 
-    // ✅ Helpers to detect number types
     bool isInteger(const std::string& s) const;
     bool isDouble(const std::string& s) const;
   
     void emitSingleStatement(const IRInstruction& instr, std::ostringstream& oss);
 };
 
-#endif // CODE_GENERATOR_H
+#endif 

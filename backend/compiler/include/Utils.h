@@ -6,7 +6,6 @@
 #undef _UNICODE
 #include <windows.h>
 
-// Convert std::wstring to std::string (UTF-8)
 inline std::string wstringToString(const std::wstring& wstr) {
     if (wstr.empty()) return std::string();
     int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.length(), nullptr, 0, nullptr, nullptr);
@@ -15,7 +14,6 @@ inline std::string wstringToString(const std::wstring& wstr) {
     return strTo;
 }
 
-// Convert std::string to std::wstring
 inline std::wstring stringToWstring(const std::string& str) {
     if (str.empty()) return std::wstring();
     int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.length(), nullptr, 0);
@@ -24,4 +22,4 @@ inline std::wstring stringToWstring(const std::string& str) {
     return wstrTo;
 }
 
-#endif // UTILS_H
+#endif 

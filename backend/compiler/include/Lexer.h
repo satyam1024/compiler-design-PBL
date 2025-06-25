@@ -6,20 +6,15 @@
 #include <memory>
 
 enum class TokenType {
-    // Keywords
     LET, BE, INPUT, OUTPUT,
     ADD, SUBTRACT, MULTIPLY, DIVIDE, STORE, IN, AND,
     IF, ELSE, OTHERWISE, THEN,
     REPEAT, FROM, TO, JUMP, UNTIL,
-    // Operators
-    ASSIGN, // '='
-    REL_OP, // <, >, <=, >=, ==, !=
-    // Literals
+    ASSIGN, 
+    REL_OP, 
     IDENTIFIER, NUMBER, STRING,
-    // Symbols
     END_OF_LINE,
     END_OF_FILE,
-    // Error
     INVALID
 };
 
@@ -54,4 +49,4 @@ private:
     Token relOp();
 };
 
-#endif // LEXER_H
+#endif 

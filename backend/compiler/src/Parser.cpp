@@ -1,7 +1,6 @@
 #include "Parser.h"
 #include <iostream>
 
-// Helper macros
 #define CURRENT_TOKEN (pos < tokens.size() ? tokens[pos] : tokens.back())
 
 Parser::Parser(const std::vector<Token>& tks)
@@ -39,7 +38,7 @@ std::unique_ptr<Program> Parser::parse() {
     while (peek().type != TokenType::END_OF_FILE) {
         auto stmt = parseStatement();
         if (stmt) program->statements.push_back(std::move(stmt));
-        else get(); // Skip to next token on error
+        else get(); 
     }
     return program;
 }
@@ -53,7 +52,6 @@ std::unique_ptr<Statement> Parser::parseStatement() {
         return parseBinOp();
     if (peek().type == TokenType::IF) return parseIf();
     if (peek().type == TokenType::REPEAT) return parseRepeat();
-    // Could add more statements here
     errors.push_back("Line " + std::to_string(peek().line) + ": Unexpected statement.");
     return nullptr;
 }
@@ -140,7 +138,6 @@ std::unique_ptr<Statement> Parser::parseIf() {
     expect(TokenType::IF, "Expected 'if'");
     stmt->condition = parseExpression();
     expect(TokenType::THEN, "Expected 'then' after condition.");
-    // For simplicity, parse one statement in then/else. Expand as needed.
     stmt->thenBranch.push_back(parseStatement());
     if (peek().type == TokenType::ELSE) {
         get();
@@ -160,16 +157,15 @@ std::unique_ptr<Statement> Parser::parseRepeat() {
     expect(TokenType::REPEAT, "Expected 'repeat'");
 
     if (peek().type == TokenType::FROM) {
-        get(); // consume 'from'
+        get(); 
         if (peek().type != TokenType::IDENTIFIER) {
             errors.push_back("Line " + std::to_string(peek().line) + ": Expected variable name after 'from'.");
             return nullptr;
         }
         stmt->varName = get().lexeme;
 
-        // Expect '=' as ASSIGN token after variable name
         if (peek().type == TokenType::ASSIGN) {
-            get(); // consume '='
+            get(); 
         } else {
             errors.push_back("Line " + std::to_string(peek().line) + ": Expected '=' after variable name.");
             return nullptr;
@@ -181,10 +177,9 @@ std::unique_ptr<Statement> Parser::parseRepeat() {
         expect(TokenType::JUMP, "Expected 'jump'");
         stmt->jump = parseExpression();
 
-        // Parse loop body (for now, just one statement)
         stmt->body.push_back(parseStatement());
     } else if (peek().type == TokenType::UNTIL) {
-        get(); // consume 'until'
+        get(); 
         stmt->untilCondition = parseExpression();
         stmt->body.push_back(parseStatement());
     } else {

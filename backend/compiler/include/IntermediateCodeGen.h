@@ -6,11 +6,10 @@
 #include <string>
 #include <memory>
 
-// An IR instruction: opcode + operands as strings
 struct IRInstruction {
     std::string opcode;
     std::vector<std::string> operands;
-    int line; // For debugging
+    int line; 
 
     IRInstruction(const std::string& op, const std::vector<std::string>& ops, int ln)
         : opcode(op), operands(ops), line(ln) {}
@@ -35,4 +34,4 @@ private:
     std::string newTemp();
 };
 
-#endif // INTERMEDIATE_CODE_GEN_H
+#endif 

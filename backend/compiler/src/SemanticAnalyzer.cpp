@@ -1,9 +1,6 @@
 #include "SemanticAnalyzer.h"
 #include <sstream>
 
-// Add BOOLEAN to VarType (if not already in your headers)
-// enum class VarType { NUMBER, STRING, BOOLEAN, UNKNOWN };
-
 SemanticAnalyzer::SemanticAnalyzer() {}
 
 void SemanticAnalyzer::analyze(const Program* program) {
@@ -17,7 +14,6 @@ void SemanticAnalyzer::analyze(const Program* program) {
 void SemanticAnalyzer::analyzeStatement(const Statement* stmt) {
     if (!stmt) return;
 
-    // Variable Declaration / Assignment
     if (auto varDecl = dynamic_cast<const VarDecl*>(stmt)) {
         VarType exprType = VarType::UNKNOWN;
         analyzeExpression(varDecl->value.get(), exprType);
@@ -33,23 +29,19 @@ void SemanticAnalyzer::analyzeStatement(const Statement* stmt) {
         return;
     }
 
-    // Input Statement
     if (auto inputStmt = dynamic_cast<const InputStmt*>(stmt)) {
         if (!isVariableDeclared(inputStmt->varName)) {
-            // Assume input is number if not declared
             declareVariable(inputStmt->varName, VarType::NUMBER, stmt->line);
         }
         return;
     }
 
-    // Output Statement
     if (auto outputStmt = dynamic_cast<const OutputStmt*>(stmt)) {
         VarType exprType = VarType::UNKNOWN;
         analyzeExpression(outputStmt->value.get(), exprType);
         return;
     }
 
-    // Binary Operation
     if (auto binOp = dynamic_cast<const BinOpStmt*>(stmt)) {
         VarType leftType = VarType::UNKNOWN;
         VarType rightType = VarType::UNKNOWN;
@@ -66,7 +58,6 @@ void SemanticAnalyzer::analyzeStatement(const Statement* stmt) {
             rightType = getVariableType(binOp->right);
         }
 
-        // Type checking logic
         if (leftType != VarType::NUMBER || rightType != VarType::NUMBER) {
             std::stringstream ss;
             ss << "Line " << stmt->line << ": Cannot perform binary operation on types ";
@@ -74,7 +65,6 @@ void SemanticAnalyzer::analyzeStatement(const Statement* stmt) {
             errors.push_back(ss.str());
         }
 
-        // Result variable: declare if not already
         if (!isVariableDeclared(binOp->result)) {
             declareVariable(binOp->result, VarType::NUMBER, stmt->line);
         }
@@ -82,7 +72,6 @@ void SemanticAnalyzer::analyzeStatement(const Statement* stmt) {
         return;
     }
 
-    // If Statement
     if (auto ifStmt = dynamic_cast<const IfStmt*>(stmt)) {
         VarType condType = VarType::UNKNOWN;
         analyzeExpression(ifStmt->condition.get(), condType);
@@ -92,7 +81,6 @@ void SemanticAnalyzer::analyzeStatement(const Statement* stmt) {
         return;
     }
 
-    // Repeat Statement
     if (auto repeatStmt = dynamic_cast<const RepeatStmt*>(stmt)) {
         if (!repeatStmt->varName.empty() && !isVariableDeclared(repeatStmt->varName)) {
             declareVariable(repeatStmt->varName, VarType::NUMBER, stmt->line);

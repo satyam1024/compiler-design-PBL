@@ -24,7 +24,6 @@ bool Optimizer::isNumber(const std::string& s) const {
 
 void Optimizer::constantFolding() {
     for (auto& instr : optimizedIR) {
-        // Arithmetic operations
         if ((instr.opcode == "ADD" || instr.opcode == "SUB" ||
              instr.opcode == "MUL" || instr.opcode == "DIV") &&
             instr.operands.size() == 3) {
@@ -42,7 +41,6 @@ void Optimizer::constantFolding() {
             }
         }
         
-        // Relational operations
         if ((instr.opcode == "LT" || instr.opcode == "LE" || 
              instr.opcode == "GT" || instr.opcode == "GE" ||
              instr.opcode == "EQ" || instr.opcode == "NE") &&
@@ -70,12 +68,10 @@ void Optimizer::constantFolding() {
 void Optimizer::removeRedundantAssignments() {
     std::vector<IRInstruction> filtered;
     for (const auto& instr : optimizedIR) {
-        // Case 1: ASSIGN x, x
         bool isRedundant = (instr.opcode == "ASSIGN" && 
                             instr.operands.size() == 2 &&
                             instr.operands[0] == instr.operands[1]);
         
-        // Case 2: ASSIGN constant immediately after same constant
         if (!isRedundant && !filtered.empty() &&
             instr.opcode == "ASSIGN" &&
             filtered.back().opcode == "ASSIGN" &&

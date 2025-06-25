@@ -19,4 +19,4 @@ private:
     bool isNumber(const std::string& s) const;
 };
 
-#endif // OPTIMIZER_H
+#endif 
